@@ -2,16 +2,17 @@
 Code from my Wide Residual Network repository : https://github.com/titu1994/Wide-Residual-Networks
 '''
 from keras.models import Model
-from keras.layers import Input, merge, Activation, Dropout, Flatten, Dense
-from keras.layers.convolutional import Convolution2D, MaxPooling2D, AveragePooling2D
+from keras.layers import Input, merge, Activation, Dropout, Flatten, Dense, Add
+from keras.layers.convolutional import Conv2D, MaxPooling2D, AveragePooling2D
 from keras.layers.normalization import BatchNormalization
 from keras import backend as K
+import tensorflow as tf
 
 
 def initial_conv(input):
-    x = Convolution2D(16, 3, 3, border_mode='same')(input)
+    x = Conv2D(16, (3, 3), padding='same')(input)
 
-    channel_axis = 1 if K.image_dim_ordering() == "th" else -1
+    channel_axis = 1 if K.image_data_format() == "th" else -1
 
     x = BatchNormalization(axis=channel_axis)(x)
     x = Activation('relu')(x)
@@ -20,79 +21,79 @@ def initial_conv(input):
 def conv1_block(input, k=1, dropout=0.0):
     init = input
 
-    channel_axis = 1 if K.image_dim_ordering() == "th" else -1
+    channel_axis = 1 if K.image_data_format() == "th" else -1
 
-    # Check if input number of filters is same as 16 * k, else create convolution2d for this input
-    if K.image_dim_ordering() == "th":
-        if init._keras_shape[1] != 16 * k:
-            init = Convolution2D(16 * k, 1, 1, activation='linear', border_mode='same')(init)
+    # Check if input number of filters is same as 16 * k, else create Conv2D for this input
+    if K.image_data_format() == "th":
+        if init.shape[1] != 16 * k:
+            init = Conv2D(16 * k, (1, 1), activation='linear', padding='same')(init)
     else:
-        if init._keras_shape[-1] != 16 * k:
-            init = Convolution2D(16 * k, 1, 1, activation='linear', border_mode='same')(init)
+        if init.shape[-1] != 16 * k:
+            init = Conv2D(16 * k, (1, 1), activation='linear', padding='same')(init)
 
-    x = Convolution2D(16 * k, 3, 3, border_mode='same')(input)
+    x = Conv2D(16 * k, (3, 3), padding='same')(input)
     x = BatchNormalization(axis=channel_axis)(x)
     x = Activation('relu')(x)
 
     if dropout > 0.0: x = Dropout(dropout)(x)
 
-    x = Convolution2D(16 * k, 3, 3, border_mode='same')(x)
+    x = Conv2D(16 * k, (3, 3), padding='same')(x)
     x = BatchNormalization(axis=channel_axis)(x)
     x = Activation('relu')(x)
 
-    m = merge([init, x], mode='sum')
+    m = Add()([init, x])
     return m
 
 def conv2_block(input, k=1, dropout=0.0):
     init = input
 
-    channel_axis = 1 if K.image_dim_ordering() == "th" else -1
+    channel_axis = 1 if K.image_data_format() == "th" else -1
 
-    # Check if input number of filters is same as 32 * k, else create convolution2d for this input
-    if K.image_dim_ordering() == "th":
-        if init._keras_shape[1] != 32 * k:
-            init = Convolution2D(32 * k, 1, 1, activation='linear', border_mode='same')(init)
+    # Check if input number of filters is same as 32 * k, else create Conv2D for this input
+    if K.image_data_format() == "th":
+        if init.shape[1] != 32 * k:
+            init = Conv2D(32 * k, (1, 1), activation='linear', padding='same')(init)
     else:
-        if init._keras_shape[-1] != 32 * k:
-            init = Convolution2D(32 * k, 1, 1, activation='linear', border_mode='same')(init)
+        if init.shape[-1] != 32 * k:
+            init = Conv2D(32 * k, (1, 1), activation='linear', padding='same')(init)
 
-    x = Convolution2D(32 * k, 3, 3, border_mode='same')(input)
+    x = Conv2D(32 * k, (3, 3), padding='same')(input)
     x = BatchNormalization(axis=channel_axis)(x)
     x = Activation('relu')(x)
 
     if dropout > 0.0: x = Dropout(dropout)(x)
 
-    x = Convolution2D(32 * k, 3, 3, border_mode='same')(x)
+    x = Conv2D(32 * k, (3, 3), padding='same')(x)
     x = BatchNormalization(axis=channel_axis)(x)
     x = Activation('relu')(x)
 
-    m = merge([init, x], mode='sum')
+    m = Add()([init, x])
     return m
 
 def conv3_block(input, k=1, dropout=0.0):
     init = input
 
-    channel_axis = 1 if K.image_dim_ordering() == "th" else -1
+    channel_axis = 1 if K.image_data_format() == "th" else -1
 
-    # Check if input number of filters is same as 64 * k, else create convolution2d for this input
-    if K.image_dim_ordering() == "th":
-        if init._keras_shape[1] != 64 * k:
-            init = Convolution2D(64 * k, 1, 1, activation='linear', border_mode='same')(init)
+    # Check if input number of filters is same as 64 * k, else create Conv2D for this input
+    if K.image_data_format() == "th":
+        if init.shape[1] != 64 * k:
+            init = Conv2D(64 * k, (1, 1), activation='linear', padding='same')(init)
     else:
-        if init._keras_shape[-1] != 64 * k:
-            init = Convolution2D(64 * k, 1, 1, activation='linear', border_mode='same')(init)
+        if init.shape[-1] != 64 * k:
+            init = Conv2D(64 * k, (1, 1), activation='linear', padding='same')(init)
 
-    x = Convolution2D(64 * k, 3, 3, border_mode='same')(input)
+    x = Conv2D(64 * k, (3, 3), padding='same')(input)
     x = BatchNormalization(axis=channel_axis)(x)
     x = Activation('relu')(x)
 
     if dropout > 0.0: x = Dropout(dropout)(x)
 
-    x = Convolution2D(64 * k, 3, 3, border_mode='same')(x)
+    x = Conv2D(64 * k, (3, 3), padding='same')(x)
     x = BatchNormalization(axis=channel_axis)(x)
     x = Activation('relu')(x)
 
-    m = merge([init, x], mode='sum')
+    m = Add()([init, x])
     return m
 
 def create_wide_residual_network(input_dim, nb_classes=100, N=2, k=1, dropout=0.0, verbose=1):

@@ -73,7 +73,7 @@ testX /= 255.0
 trainY_cat = kutils.to_categorical(trainY)
 testY_cat = kutils.to_categorical(testY)
 
-if K.image_dim_ordering() == "th":
+if K.image_data_format() == "th":
     init = (3, 32, 32)
 else:
     init = (32, 32, 3)

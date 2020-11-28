@@ -60,7 +60,7 @@ generator = ImageDataGenerator(rotation_range=15,
 
 generator.fit(trainX, seed=0, augment=True)
 
-if K.image_dim_ordering() == "th":
+if K.image_data_format() == "th":
     init = (3, img_rows, img_cols)
 else:
     init = (img_rows, img_cols, 3)
@@ -78,10 +78,10 @@ else:
 model.compile(loss="categorical_crossentropy", optimizer="sgd", metrics=["acc"])
 print("Finished compiling")
 
-hist = model.fit_generator(generator.flow(trainX, trainY, batch_size=batch_size), samples_per_epoch=len(trainX), nb_epoch=nb_epoch,
+hist = model.fit_generator(generator.flow(trainX, trainY, batch_size=batch_size), steps_per_epoch=len(trainX), epochs=nb_epoch,
                    callbacks=snapshot.get_callbacks(model_prefix=model_prefix), # Build snapshot callbacks
                    validation_data=(testX, testY_cat),
-                   nb_val_samples=testX.shape[0])
+                   validation_steps=testX.shape[0])
 
 with open(model_prefix + ' training.json', mode='w') as f:
     json.dump(hist.history, f)

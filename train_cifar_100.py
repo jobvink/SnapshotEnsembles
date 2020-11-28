@@ -61,7 +61,7 @@ generator = ImageDataGenerator(rotation_range=15,
 
 generator.fit(trainX, seed=0, augment=True)
 
-if K.image_dim_ordering() == "th":
+if K.image_data_format() == "th":
     init = (3, img_rows, img_cols)
 else:
     init = (img_rows, img_cols, 3)

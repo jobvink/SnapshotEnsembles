@@ -5,10 +5,10 @@ Code from my DenseNet repository : https://github.com/titu1994/DenseNet
 
 from keras.models import Model
 from keras.layers.core import Dense, Dropout, Activation
-from keras.layers.convolutional import Convolution2D
+from keras.layers.convolutional import Conv2D
 from keras.layers.pooling import AveragePooling2D
 from keras.layers.pooling import GlobalAveragePooling2D
-from keras.layers import Input, merge
+from keras.layers import Input, merge, Concatenate
 from keras.layers.normalization import BatchNormalization
 from keras.regularizers import l2
 import keras.backend as K
@@ -22,16 +22,16 @@ def conv_block(ip, nb_filter, dropout_rate=None, weight_decay=1E-4):
         dropout_rate: dropout rate
         weight_decay: weight decay factor
 
-    Returns: keras tensor with batch_norm, relu and convolution2d added
+    Returns: keras tensor with batch_norm, relu and Conv2D added
 
     '''
 
-    concat_axis = 1 if K.image_dim_ordering() == "th" else -1
+    concat_axis = 1 if K.image_data_format() == "th" else -1
 
     x = BatchNormalization(mode=0, axis=concat_axis, gamma_regularizer=l2(weight_decay),
                            beta_regularizer=l2(weight_decay))(ip)
     x = Activation('relu')(x)
-    x = Convolution2D(nb_filter, 3, 3, init="he_uniform", border_mode="same", bias=False,
+    x = Conv2D(nb_filter, (3, 3), init="he_uniform", padding="same", bias=False,
                       W_regularizer=l2(weight_decay))(x)
     if dropout_rate:
         x = Dropout(dropout_rate)(x)
@@ -52,12 +52,12 @@ def transition_block(ip, nb_filter, dropout_rate=None, weight_decay=1E-4):
 
     '''
 
-    concat_axis = 1 if K.image_dim_ordering() == "th" else -1
+    concat_axis = 1 if K.image_data_format() == "th" else -1
 
     x = BatchNormalization(mode=0, axis=concat_axis, gamma_regularizer=l2(weight_decay),
                            beta_regularizer=l2(weight_decay))(ip)
     x = Activation('relu')(x)
-    x = Convolution2D(nb_filter, 1, 1, init="he_uniform", border_mode="same", bias=False,
+    x = Conv2D(nb_filter, (1, 1), init="he_uniform", padding="same", bias=False,
                       W_regularizer=l2(weight_decay))(x)
     if dropout_rate:
         x = Dropout(dropout_rate)(x)
@@ -81,14 +81,14 @@ def dense_block(x, nb_layers, nb_filter, growth_rate, dropout_rate=None, weight_
 
     '''
 
-    concat_axis = 1 if K.image_dim_ordering() == "th" else -1
+    concat_axis = 1 if K.image_data_format() == "th" else -1
 
     feature_list = [x]
 
     for i in range(nb_layers):
         x = conv_block(x, growth_rate, dropout_rate, weight_decay)
         feature_list.append(x)
-        x = merge(feature_list, mode='concat', concat_axis=concat_axis)
+        x = Concatenate()(feature_list, concat_axis=concat_axis)
         nb_filter += growth_rate
 
     return x, nb_filter
@@ -114,7 +114,7 @@ def create_dense_net(nb_classes, img_dim, depth=40, nb_dense_block=1, growth_rat
 
     model_input = Input(shape=img_dim)
 
-    concat_axis = 1 if K.image_dim_ordering() == "th" else -1
+    concat_axis = 1 if K.image_data_format() == "th" else -1
 
     assert (depth - 4) % 3 == 0, "Depth must be 3 N + 4"
 
@@ -122,7 +122,7 @@ def create_dense_net(nb_classes, img_dim, depth=40, nb_dense_block=1, growth_rat
     nb_layers = int((depth - 4) / 3)
 
     # Initial convolution
-    x = Convolution2D(nb_filter, 3, 3, init="he_uniform", border_mode="same", name="initial_conv2D", bias=False,
+    x = Conv2D(nb_filter, (3, 3), init="he_uniform", padding="same", name="initial_conv2D", bias=False,
                       W_regularizer=l2(weight_decay))(model_input)
 
     # Add dense blocks
