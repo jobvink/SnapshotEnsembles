@@ -1,4 +1,3 @@
-import json
 import numpy as np
 import sklearn.metrics as metrics
 import argparse
@@ -11,6 +10,8 @@ from keras import backend as K
 
 from snapshot import SnapshotCallbackBuilder
 from models import wide_residual_net as WRN, dense_net as DN
+
+import pandas as pd
 
 parser = argparse.ArgumentParser(description='CIFAR 10 Ensemble Prediction')
 
@@ -83,8 +84,9 @@ hist = model.fit_generator(generator.flow(trainX, trainY, batch_size=batch_size)
                    validation_data=(testX, testY_cat),
                    validation_steps=testX.shape[0])
 
-with open(model_prefix + ' training.json', mode='w') as f:
-    json.dump(hist.history, f)
+with open(model_prefix + ' training.csv', mode='w') as f:
+    hist_df = pd.DataFrame(hist.history)
+    hist_df.to_csv(f)
 
 yPreds = model.predict(testX)
 yPred = np.argmax(yPreds, axis=1)

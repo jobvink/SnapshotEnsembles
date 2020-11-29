@@ -1,4 +1,3 @@
-import json
 import numpy as np
 import argparse
 import sklearn.metrics as metrics
@@ -9,6 +8,8 @@ from models import wide_residual_net as WRN, dense_net as DN
 from keras.datasets import cifar10
 from keras import backend as K
 import keras.utils.np_utils as kutils
+
+import pandas as pd
 
 parser = argparse.ArgumentParser(description='CIFAR 10 Ensemble Prediction')
 
@@ -121,8 +122,8 @@ def calculate_weighted_accuracy():
 
 
 if OPTIMIZE == 0:
-    with open('weights/Ensemble weights %s.json' % model_prefix, mode='r') as f:
-        dictionary = json.load(f)
+    with open('weights/Ensemble weights %s.csv' % model_prefix, mode='r') as f:
+        dictionary = pd.read_csv(f)
 
     prediction_weights = dictionary['best_weights']
     calculate_weighted_accuracy()
@@ -178,9 +179,10 @@ for iteration in range(NUM_TESTS):
 print("Best Accuracy : ", best_acc)
 print("Best Weights : ", best_weights)
 
-with open('weights/Ensemble weights %s.json' % model_prefix, mode='w') as f:
+with open('weights/Ensemble weights %s.csv' % model_prefix, mode='w') as f:
     dictionary = {'best_weights' : best_weights.tolist()}
-    json.dump(dictionary, f)
+    df = pd.DataFrame(dictionary)
+    df.to_csv(f)
 
 ''' END OF OPTIMIZATION REGION '''
 
