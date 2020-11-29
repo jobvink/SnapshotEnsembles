@@ -3,12 +3,12 @@ import sklearn.metrics as metrics
 import argparse
 import os
 
-import keras.utils.np_utils as kutils
-from keras.datasets import cifar100
-from keras.layers import Input
-from keras.models import Model
-from keras.preprocessing.image import ImageDataGenerator
-from keras import backend as K
+import tensorflow.keras.utils as kutils
+from tensorflow.keras.datasets import cifar100
+from tensorflow.keras.layers import Input
+from tensorflow.keras.models import Model
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras import backend as K
 
 from snapshot import SnapshotCallbackBuilder
 from models import wide_residual_net as WRN, dense_net as DN

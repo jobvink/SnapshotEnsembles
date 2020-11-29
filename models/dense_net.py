@@ -3,26 +3,26 @@ Code from my DenseNet repository : https://github.com/titu1994/DenseNet
 '''
 
 
-from keras.models import Model
-from keras.layers.core import Dense, Dropout, Activation
-from keras.layers.convolutional import Conv2D
-from keras.layers.pooling import AveragePooling2D
-from keras.layers.pooling import GlobalAveragePooling2D
-from keras.layers import Input, merge, Concatenate
-from keras.layers.normalization import BatchNormalization
-from keras.regularizers import l2
-import keras.backend as K
+from tensorflow.keras.models import Model
+from tensorflow.keras.layers.core import Dense, Dropout, Activation
+from tensorflow.keras.layers.convolutional import Conv2D
+from tensorflow.keras.layers.pooling import AveragePooling2D
+from tensorflow.keras.layers.pooling import GlobalAveragePooling2D
+from tensorflow.keras.layers import Input, merge, Concatenate
+from tensorflow.keras.layers.normalization import BatchNormalization
+from tensorflow.keras.regularizers import l2
+import tensorflow.keras.backend as K
 
 def conv_block(ip, nb_filter, dropout_rate=None, weight_decay=1E-4):
     ''' Apply BatchNorm, Relu 3x3, Conv2D, optional dropout
 
     Args:
-        ip: Input keras tensor
+        ip: Input tensorflow.keras tensor
         nb_filter: number of filters
         dropout_rate: dropout rate
         weight_decay: weight decay factor
 
-    Returns: keras tensor with batch_norm, relu and Conv2D added
+    Returns: tensorflow.keras tensor with batch_norm, relu and Conv2D added
 
     '''
 
@@ -43,12 +43,12 @@ def transition_block(ip, nb_filter, dropout_rate=None, weight_decay=1E-4):
     ''' Apply BatchNorm, Relu 1x1, Conv2D, optional dropout and Maxpooling2D
 
     Args:
-        ip: keras tensor
+        ip: tensorflow.keras tensor
         nb_filter: number of filters
         dropout_rate: dropout rate
         weight_decay: weight decay factor
 
-    Returns: keras tensor, after applying batch_norm, relu-conv, dropout, maxpool
+    Returns: tensorflow.keras tensor, after applying batch_norm, relu-conv, dropout, maxpool
 
     '''
 
@@ -70,14 +70,14 @@ def dense_block(x, nb_layers, nb_filter, growth_rate, dropout_rate=None, weight_
     ''' Build a dense_block where the output of each conv_block is fed to subsequent ones
 
     Args:
-        x: keras tensor
+        x: tensorflow.keras tensor
         nb_layers: the number of layers of conv_block to append to the model.
         nb_filter: number of filters
         growth_rate: growth rate
         dropout_rate: dropout rate
         weight_decay: weight decay factor
 
-    Returns: keras tensor with nb_layers of conv_block appended
+    Returns: tensorflow.keras tensor with nb_layers of conv_block appended
 
     '''
 
@@ -108,7 +108,7 @@ def create_dense_net(nb_classes, img_dim, depth=40, nb_dense_block=1, growth_rat
         dropout_rate: dropout rate
         weight_decay: weight decay
 
-    Returns: keras tensor with nb_layers of conv_block appended
+    Returns: tensorflow.keras tensor with nb_layers of conv_block appended
 
     '''
 

@@ -1,6 +1,6 @@
-# Snapshot Ensembles in Keras
+# Snapshot Ensembles in tensorflow.keras
 
-Implementation of the paper [Snapshot Ensembles: Train 1, Get M for Free](http://openreview.net/pdf?id=BJYwwY9ll) in Keras 1.1.1
+Implementation of the paper [Snapshot Ensembles: Train 1, Get M for Free](http://openreview.net/pdf?id=BJYwwY9ll) in tensorflow.keras 1.1.1
 
 # Explanation 
 
@@ -23,7 +23,7 @@ Figure 1: Left: Illustration of SGD optimization with a typical learning rate sc
 
 The paper uses several models such as ResNet-101, Wide Residual Network and DenseNet-40 and DenseNet-100. While DenseNets are the highest performing models in the paper, they are too large and take extremely long to train. Therefore, the current trained model is the Wide Residual Net (16-4) setting. This model performs poorly compared to the 34-4 version but trains several times faster.
 
-The technique is simple to implement in Keras, using a custom callback. These callbacks can be built using the `SnapshotCallbackBuilder` class in `snapshot.py`. Other models can simply use this callback builder to other models to train them in a similar manner.
+The technique is simple to implement in tensorflow.keras, using a custom callback. These callbacks can be built using the `SnapshotCallbackBuilder` class in `snapshot.py`. Other models can simply use this callback builder to other models to train them in a similar manner.
 
 To use snapshot ensemble in other models : 
 ```
@@ -108,7 +108,7 @@ Some parameters for DenseNet models from the paper:
 
 # Requirements
 
-- Keras
+- tensorflow.keras
 - Theano (tested) / Tensorflow (not tested, weights not available but can be converted)
 - scipy
 - h5py

@@ -1,8 +1,8 @@
 import numpy as np
 import os
 
-import keras.callbacks as callbacks
-from keras.callbacks import Callback
+import tensorflow.keras.callbacks as callbacks
+from tensorflow.keras.callbacks import Callback
 
 class SnapshotModelCheckpoint(Callback):
     """Callback that saves the snapshot weights of the model.

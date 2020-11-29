@@ -5,9 +5,9 @@ from scipy.optimize import minimize
 from sklearn.metrics import log_loss
 from models import wide_residual_net as WRN, dense_net as DN
 
-from keras.datasets import cifar100
-from keras import backend as K
-import keras.utils.np_utils as kutils
+from tensorflow.keras.datasets import cifar100
+from tensorflow.keras import backend as K
+import tensorflow.keras.utils as kutils
 
 import pandas as pd
 

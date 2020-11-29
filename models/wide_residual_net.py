@@ -1,11 +1,11 @@
 '''
 Code from my Wide Residual Network repository : https://github.com/titu1994/Wide-Residual-Networks
 '''
-from keras.models import Model
-from keras.layers import Input, merge, Activation, Dropout, Flatten, Dense, Add
-from keras.layers.convolutional import Conv2D, MaxPooling2D, AveragePooling2D
-from keras.layers.normalization import BatchNormalization
-from keras import backend as K
+from tensorflow.keras.models import Model
+from tensorflow.keras.layers import Input, Activation, Dropout, Flatten, Dense, Add
+from tensorflow.keras.layers import Conv2D, MaxPooling2D, AveragePooling2D
+from tensorflow.keras.layers import BatchNormalization
+from tensorflow.keras import backend as K
 import tensorflow as tf
 
 
@@ -100,7 +100,7 @@ def create_wide_residual_network(input_dim, nb_classes=100, N=2, k=1, dropout=0.
     """
     Creates a Wide Residual Network with specified parameters
 
-    :param input: Input Keras object
+    :param input: Input tensorflow.keras object
     :param nb_classes: Number of output classes
     :param N: Depth of the network. Compute N = (n - 4) / 6.
               Example : For a depth of 16, n = 16, N = (16 - 4) / 6 = 2
@@ -143,9 +143,9 @@ def create_wide_residual_network(input_dim, nb_classes=100, N=2, k=1, dropout=0.
     return model
 
 if __name__ == "__main__":
-    from keras.utils.visualize_util import plot
-    from keras.layers import Input
-    from keras.models import Model
+    from tensorflow.keras.utils import plot_model
+    from tensorflow.keras.layers import Input
+    from tensorflow.keras.models import Model
 
     init = (3, 32, 32)
 
@@ -154,4 +154,4 @@ if __name__ == "__main__":
     model = Model(init, wrn_28_10)
 
     model.summary()
-    plot(model, "WRN-28-10.png", show_shapes=True, show_layer_names=True)
+    plot_model(model, "WRN-28-10.png", show_shapes=True, show_layer_names=True)
