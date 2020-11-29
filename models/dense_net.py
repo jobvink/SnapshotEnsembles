@@ -4,12 +4,12 @@ Code from my DenseNet repository : https://github.com/titu1994/DenseNet
 
 
 from tensorflow.keras.models import Model
-from tensorflow.keras.layers.core import Dense, Dropout, Activation
-from tensorflow.keras.layers.convolutional import Conv2D
-from tensorflow.keras.layers.pooling import AveragePooling2D
-from tensorflow.keras.layers.pooling import GlobalAveragePooling2D
-from tensorflow.keras.layers import Input, merge, Concatenate
-from tensorflow.keras.layers.normalization import BatchNormalization
+from tensorflow.keras.layers import Dense, Dropout, Activation
+from tensorflow.keras.layers import Conv2D
+from tensorflow.keras.layers import AveragePooling2D
+from tensorflow.keras.layers import GlobalAveragePooling2D
+from tensorflow.keras.layers import Input, Concatenate
+from tensorflow.keras.layers import BatchNormalization
 from tensorflow.keras.regularizers import l2
 import tensorflow.keras.backend as K
 
