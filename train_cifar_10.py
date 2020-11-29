@@ -79,10 +79,9 @@ else:
 model.compile(loss="categorical_crossentropy", optimizer="sgd", metrics=["acc"])
 print("Finished compiling")
 
-hist = model.fit_generator(generator.flow(trainX, trainY, batch_size=batch_size), steps_per_epoch=len(trainX), epochs=nb_epoch,
+hist = model.fit_generator(generator.flow(trainX, trainY, batch_size=batch_size), epochs=nb_epoch,
                    callbacks=snapshot.get_callbacks(model_prefix=model_prefix), # Build snapshot callbacks
-                   validation_data=(testX, testY_cat),
-                   validation_steps=testX.shape[0])
+                   validation_data=(testX, testY_cat))
 
 with open(model_prefix + ' training.csv', mode='w') as f:
     hist_df = pd.DataFrame(hist.history)
