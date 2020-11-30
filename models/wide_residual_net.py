@@ -12,7 +12,7 @@ import tensorflow as tf
 def initial_conv(input):
     x = Conv2D(16, (3, 3), padding='same')(input)
 
-    channel_axis = 1 if K.image_data_format() == "th" else -1
+    channel_axis = 1 if K.image_data_format() == channels_first else -1
 
     x = BatchNormalization(axis=channel_axis)(x)
     x = Activation('relu')(x)
@@ -21,10 +21,10 @@ def initial_conv(input):
 def conv1_block(input, k=1, dropout=0.0):
     init = input
 
-    channel_axis = 1 if K.image_data_format() == "th" else -1
+    channel_axis = 1 if K.image_data_format() == channels_first else -1
 
     # Check if input number of filters is same as 16 * k, else create Conv2D for this input
-    if K.image_data_format() == "th":
+    if K.image_data_format() == channels_first:
         if init.shape[1] != 16 * k:
             init = Conv2D(16 * k, (1, 1), activation='linear', padding='same')(init)
     else:
@@ -47,10 +47,10 @@ def conv1_block(input, k=1, dropout=0.0):
 def conv2_block(input, k=1, dropout=0.0):
     init = input
 
-    channel_axis = 1 if K.image_data_format() == "th" else -1
+    channel_axis = 1 if K.image_data_format() == channels_first else -1
 
     # Check if input number of filters is same as 32 * k, else create Conv2D for this input
-    if K.image_data_format() == "th":
+    if K.image_data_format() == channels_first:
         if init.shape[1] != 32 * k:
             init = Conv2D(32 * k, (1, 1), activation='linear', padding='same')(init)
     else:
@@ -73,10 +73,10 @@ def conv2_block(input, k=1, dropout=0.0):
 def conv3_block(input, k=1, dropout=0.0):
     init = input
 
-    channel_axis = 1 if K.image_data_format() == "th" else -1
+    channel_axis = 1 if K.image_data_format() == channels_first else -1
 
     # Check if input number of filters is same as 64 * k, else create Conv2D for this input
-    if K.image_data_format() == "th":
+    if K.image_data_format() == channels_first:
         if init.shape[1] != 64 * k:
             init = Conv2D(64 * k, (1, 1), activation='linear', padding='same')(init)
     else:
@@ -153,5 +153,4 @@ if __name__ == "__main__":
 
     model = Model(init, wrn_28_10)
 
-    model.summary()
     plot_model(model, "WRN-28-10.png", show_shapes=True, show_layer_names=True)

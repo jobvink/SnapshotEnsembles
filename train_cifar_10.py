@@ -13,6 +13,9 @@ from models import wide_residual_net as WRN, dense_net as DN
 
 import pandas as pd
 
+from models.resnet import ResnetBuilder
+from models.resnet_alt import resnet_v1
+
 parser = argparse.ArgumentParser(description='CIFAR 10 Ensemble Prediction')
 
 parser.add_argument('--M', type=int, default=5, help='Number of snapshots')
@@ -37,7 +40,7 @@ nb_epoch = T = args.nb_epoch # number of epochs
 alpha_zero = args.alpha_zero # initial learning rate
 
 model_type = str(args.model).lower()
-assert model_type in ['wrn', 'dn'], 'Model type must be one of "wrn" for Wide ResNets or "dn" for DenseNets'
+assert model_type in ['wrn', 'dn', 'resnet'], 'Model type must be one of "wrn" for Wide ResNets or "dn" for DenseNets'
 
 snapshot = SnapshotCallbackBuilder(T, M, alpha_zero)
 
@@ -61,7 +64,7 @@ generator = ImageDataGenerator(rotation_range=15,
 
 generator.fit(trainX, seed=0, augment=True)
 
-if K.image_data_format() == "th":
+if K.image_data_format() == "channels_first":
     init = (3, img_rows, img_cols)
 else:
     init = (img_rows, img_cols, 3)
@@ -70,11 +73,17 @@ if model_type == "wrn":
     model = WRN.create_wide_residual_network(init, nb_classes=10, N=args.wrn_N, k=args.wrn_k, dropout=0.00)
 
     model_prefix = 'WRN-CIFAR10-%d-%d' % (args.wrn_N * 6 + 4, args.wrn_k)
-else:
+elif model_type == 'dn':
     model = DN.create_dense_net(nb_classes=10, img_dim=init, depth=args.dn_depth, nb_dense_block=1,
                                 growth_rate=args.dn_growth_rate, nb_filter=16, dropout_rate=0.2)
 
     model_prefix = 'DenseNet-CIFAR10-%d-%d' % (args.dn_depth, args.dn_growth_rate)
+else:
+    model = resnet_v1(init, 110, 10)
+    print('resnet-110')
+    model.summary()
+
+    model_prefix = 'ResNet-CIFAR10-%d-%d' % (args.dn_depth, args.dn_growth_rate)
 
 model.compile(loss="categorical_crossentropy", optimizer="sgd", metrics=["acc"])
 print("Finished compiling")

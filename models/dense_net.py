@@ -26,7 +26,7 @@ def conv_block(ip, nb_filter, dropout_rate=None, weight_decay=1E-4):
 
     '''
 
-    concat_axis = 1 if K.image_data_format() == "th" else -1
+    concat_axis = 1 if K.image_data_format() == channels_first else -1
 
     x = BatchNormalization(mode=0, axis=concat_axis, gamma_regularizer=l2(weight_decay),
                            beta_regularizer=l2(weight_decay))(ip)
@@ -52,7 +52,7 @@ def transition_block(ip, nb_filter, dropout_rate=None, weight_decay=1E-4):
 
     '''
 
-    concat_axis = 1 if K.image_data_format() == "th" else -1
+    concat_axis = 1 if K.image_data_format() == channels_first else -1
 
     x = BatchNormalization(mode=0, axis=concat_axis, gamma_regularizer=l2(weight_decay),
                            beta_regularizer=l2(weight_decay))(ip)
@@ -81,7 +81,7 @@ def dense_block(x, nb_layers, nb_filter, growth_rate, dropout_rate=None, weight_
 
     '''
 
-    concat_axis = 1 if K.image_data_format() == "th" else -1
+    concat_axis = 1 if K.image_data_format() == channels_first else -1
 
     feature_list = [x]
 
@@ -114,7 +114,7 @@ def create_dense_net(nb_classes, img_dim, depth=40, nb_dense_block=1, growth_rat
 
     model_input = Input(shape=img_dim)
 
-    concat_axis = 1 if K.image_data_format() == "th" else -1
+    concat_axis = 1 if K.image_data_format() == channels_first else -1
 
     assert (depth - 4) % 3 == 0, "Depth must be 3 N + 4"
 
