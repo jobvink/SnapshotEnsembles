@@ -122,7 +122,7 @@ def calculate_weighted_accuracy():
 
 
 if OPTIMIZE == 0:
-    with open('weights/Ensemble weights %s.csv' % model_prefix, mode='r') as f:
+    with open('weights/Ensemble-weights-%s.csv' % model_prefix, mode='r') as f:
         dictionary = pd.read_csv(f)
 
     prediction_weights = dictionary['best_weights']
@@ -179,7 +179,7 @@ for iteration in range(NUM_TESTS):
 print("Best Accuracy : ", best_acc)
 print("Best Weights : ", best_weights)
 
-with open('weights/Ensemble weights %s.csv' % model_prefix, mode='w') as f:
+with open('weights/Ensemble-weights-%s.csv' % model_prefix, mode='w') as f:
     dictionary = {'best_weights' : best_weights.tolist()}
     df = pd.DataFrame(dictionary)
     df.to_csv(f)
