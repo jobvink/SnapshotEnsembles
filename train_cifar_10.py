@@ -14,7 +14,7 @@ from models import wide_residual_net as WRN, dense_net as DN
 import pandas as pd
 
 from models.resnet import ResnetBuilder
-from models.resnet_alt import resnet_v1
+from models.resnet_alt import resnet_v1, resnet_v2
 
 parser = argparse.ArgumentParser(description='CIFAR 10 Ensemble Prediction')
 
@@ -79,9 +79,7 @@ elif model_type == 'dn':
 
     model_prefix = 'DenseNet-CIFAR10-%d-%d' % (args.dn_depth, args.dn_growth_rate)
 else:
-    model = resnet_v1(init, 110, 10)
-    print('resnet-110')
-    model.summary()
+    model = resnet_v2(init, 110, 10)
 
     model_prefix = 'ResNet-110-CIFAR10'
 
