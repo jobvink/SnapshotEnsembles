@@ -83,7 +83,7 @@ else:
     print('resnet-110')
     model.summary()
 
-    model_prefix = 'ResNet-CIFAR10-%d-%d' % (args.dn_depth, args.dn_growth_rate)
+    model_prefix = 'ResNet-110-CIFAR10'
 
 model.compile(loss="categorical_crossentropy", optimizer="sgd", metrics=["acc"])
 print("Finished compiling")

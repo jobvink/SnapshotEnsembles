@@ -41,7 +41,7 @@ NUM_TESTS = args.num_tests
 OPTIMIZE = args.optimize
 
 model_type = str(args.model).lower()
-assert model_type in ['wrn', 'dn'], 'Model type must be one of "wrn" for Wide ResNets or "dn" for DenseNets'
+assert model_type in ['wrn', 'dn', 'resnet'], 'Model type must be one of "wrn" for Wide ResNets or "dn" for DenseNets'
 
 if model_type == "wrn":
     n = args.wrn_N * 6 + 4
@@ -53,7 +53,7 @@ if model_type == "wrn":
                         r"weights/WRN-CIFAR10-%d-%d-3.h5" % (n, k),
                         r"weights/WRN-CIFAR10-%d-%d-4.h5" % (n, k),
                         r"weights/WRN-CIFAR10-%d-%d-5.h5" % (n, k)]
-else:
+elif model_type == 'dn'
     depth = args.dn_depth
     growth_rate = args.dn_growth_rate
 
@@ -64,6 +64,14 @@ else:
                         r"weights/DenseNet-CIFAR10-%d-%d-4.h5" % (depth, growth_rate),
                         r"weights/DenseNet-CIFAR10-%d-%d-5.h5" % (depth, growth_rate),
                         r"weights/DenseNet-CIFAR10-%d-%d-6.h5" % (depth, growth_rate)]
+
+else:
+    models_filenames = [r"weights/ResNet-110-CIFAR10-Best.h5",
+                        r"weights/ResNet-110-CIFAR10-1.h5",
+                        r"weights/ResNet-110-CIFAR10-2.h5",
+                        r"weights/ResNet-110-CIFAR10-3.h5",
+                        r"weights/ResNet-110-CIFAR10-4.h5",
+                        r"weights/ResNet-110-CIFAR10-5.h5",]
 
 (trainX, trainY), (testX, testY) = cifar10.load_data()
 nb_classes = len(np.unique(testY))
@@ -76,7 +84,7 @@ testX /= 255.0
 trainY_cat = kutils.to_categorical(trainY)
 testY_cat = kutils.to_categorical(testY)
 
-if K.image_data_format() == channels_first:
+if K.image_data_format() == 'channels_first':
     init = (3, 32, 32)
 else:
     init = (32, 32, 3)
