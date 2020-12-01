@@ -53,7 +53,7 @@ if model_type == "wrn":
                         r"weights/WRN-CIFAR10-%d-%d-3.h5" % (n, k),
                         r"weights/WRN-CIFAR10-%d-%d-4.h5" % (n, k),
                         r"weights/WRN-CIFAR10-%d-%d-5.h5" % (n, k)]
-elif model_type == 'dn'
+elif model_type == 'dn':
     depth = args.dn_depth
     growth_rate = args.dn_growth_rate
 
