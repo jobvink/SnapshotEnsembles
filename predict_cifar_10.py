@@ -11,6 +11,8 @@ import tensorflow.keras.utils as kutils
 
 import pandas as pd
 
+from models.resnet_alt import resnet_v1
+
 parser = argparse.ArgumentParser(description='CIFAR 10 Ensemble Prediction')
 
 parser.add_argument('--optimize', type=int, default=0, help='Optimization flag. Set to 1 to perform a randomized '
@@ -83,11 +85,14 @@ if model_type == "wrn":
     model = WRN.create_wide_residual_network(init, nb_classes=10, N=args.wrn_N, k=args.wrn_k, dropout=0.00)
 
     model_prefix = 'WRN-CIFAR10-%d-%d' % (args.wrn_N * 6 + 4, args.wrn_k)
-else:
+elif model_type == 'dn':
     model = DN.create_dense_net(nb_classes=10, img_dim=init, depth=args.dn_depth, nb_dense_block=1,
                                 growth_rate=args.dn_growth_rate, nb_filter=16, dropout_rate=0.2)
 
     model_prefix = 'DenseNet-CIFAR10-%d-%d' % (args.dn_depth, args.dn_growth_rate)
+else:
+    model = resnet_v1(init, 110, 10)
+    model_prefix = 'ResNet-110-CIFAR10'
 
 best_acc = 0.0
 best_weights = None
