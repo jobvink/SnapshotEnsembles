@@ -49,6 +49,7 @@ def resnet_layer(inputs,
         x = conv(x)
     return x
 
+
 def resnet_v2(input_shape, depth, num_classes=10):
     if (depth - 2) % 9 != 0:
         raise ValueError('depth should be 9n+2 (eg 56 or 110 in [b])')
@@ -73,7 +74,7 @@ def resnet_v2(input_shape, depth, num_classes=10):
             else:
                 num_filters_out = num_filters_in * 2
                 if res_block == 0:  # first layer but not first stage
-                    strides = 2    # downsample
+                    strides = 2  # downsample
 
             y = resnet_layer(inputs=x,
                              num_filters=num_filters_in,
@@ -90,7 +91,6 @@ def resnet_v2(input_shape, depth, num_classes=10):
                              kernel_size=1,
                              conv_first=False)
             if res_block == 0:
-
                 x = resnet_layer(inputs=x,
                                  num_filters=num_filters_out,
                                  kernel_size=1,
@@ -112,7 +112,6 @@ def resnet_v2(input_shape, depth, num_classes=10):
 
     model = Model(inputs=inputs, outputs=outputs)
     return model
-
 
 
 def resnet_v1(input_shape, depth, num_classes=10):
