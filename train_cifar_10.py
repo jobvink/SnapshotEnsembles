@@ -16,31 +16,41 @@ import pandas as pd
 from models.resnet import ResnetBuilder
 from models.resnet_alt import resnet_v1, resnet_v2
 
+import os
+os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
+
 parser = argparse.ArgumentParser(description='CIFAR 10 Ensemble Prediction')
 
 parser.add_argument('--M', type=int, default=5, help='Number of snapshots')
-parser.add_argument('--nb_epoch', type=int, default=200, help='Number of training epochs')
-parser.add_argument('--alpha_zero', type=float, default=0.1, help='Initial learning rate')
+parser.add_argument('--nb_epoch', type=int, default=200,
+                    help='Number of training epochs')
+parser.add_argument('--alpha_zero', type=float,
+                    default=0.1, help='Initial learning rate')
 
-parser.add_argument('--model', type=str, default='wrn', help='Type of model to train')
+parser.add_argument('--model', type=str, default='wrn',
+                    help='Type of model to train')
 
 # Wide ResNet Parameters
-parser.add_argument('--wrn_N', type=int, default=2, help='Number of WRN blocks. Computed as N = (n - 4) / 6.')
+parser.add_argument('--wrn_N', type=int, default=2,
+                    help='Number of WRN blocks. Computed as N = (n - 4) / 6.')
 parser.add_argument('--wrn_k', type=int, default=4, help='Width factor of WRN')
 
 # DenseNet Parameters
-parser.add_argument('--dn_depth', type=int, default=40, help='Depth of DenseNet')
-parser.add_argument('--dn_growth_rate', type=int, default=12, help='Growth rate of DenseNet')
+parser.add_argument('--dn_depth', type=int, default=40,
+                    help='Depth of DenseNet')
+parser.add_argument('--dn_growth_rate', type=int,
+                    default=12, help='Growth rate of DenseNet')
 
 args = parser.parse_args()
 
 ''' Snapshot major parameters '''
-M = args.M # number of snapshots
-nb_epoch = T = args.nb_epoch # number of epochs
-alpha_zero = args.alpha_zero # initial learning rate
+M = args.M  # number of snapshots
+nb_epoch = T = args.nb_epoch  # number of epochs
+alpha_zero = args.alpha_zero  # initial learning rate
 
 model_type = str(args.model).lower()
-assert model_type in ['wrn', 'dn', 'resnet'], 'Model type must be one of "wrn" for Wide ResNets or "dn" for DenseNets'
+assert model_type in [
+    'wrn', 'dn', 'resnet'], 'Model type must be one of "wrn" for Wide ResNets or "dn" for DenseNets'
 
 snapshot = SnapshotCallbackBuilder(T, M, alpha_zero)
 
@@ -57,10 +67,8 @@ testX /= 255.0
 trainY = kutils.to_categorical(trainY)
 testY_cat = kutils.to_categorical(testY)
 
-generator = ImageDataGenerator(rotation_range=15,
-                               width_shift_range=5./32,
-                               height_shift_range=5./32,
-                               horizontal_flip=False)
+generator = ImageDataGenerator(
+    rotation_range=15, width_shift_range=5./32, height_shift_range=5./32, horizontal_flip=False)
 
 generator.fit(trainX, seed=0, augment=True)
 
@@ -70,25 +78,29 @@ else:
     init = (img_rows, img_cols, 3)
 
 if model_type == "wrn":
-    model = WRN.create_wide_residual_network(init, nb_classes=10, N=args.wrn_N, k=args.wrn_k, dropout=0.00)
+    model = WRN.create_wide_residual_network(
+        init, nb_classes=10, N=args.wrn_N, k=args.wrn_k, dropout=0.00)
 
     model_prefix = 'WRN-CIFAR10-%d-%d' % (args.wrn_N * 6 + 4, args.wrn_k)
 elif model_type == 'dn':
     model = DN.create_dense_net(nb_classes=10, img_dim=init, depth=args.dn_depth, nb_dense_block=1,
                                 growth_rate=args.dn_growth_rate, nb_filter=16, dropout_rate=0.2)
 
-    model_prefix = 'DenseNet-CIFAR10-%d-%d' % (args.dn_depth, args.dn_growth_rate)
+    model_prefix = 'DenseNet-CIFAR10-%d-%d' % (
+        args.dn_depth, args.dn_growth_rate)
 else:
     model = resnet_v2(init, 110, 10)
 
     model_prefix = 'ResNet-110-CIFAR10'
 
-model.compile(loss="categorical_crossentropy", optimizer="sgd", metrics=["acc"])
+model.compile(loss="categorical_crossentropy",
+              optimizer="sgd", metrics=["acc"])
 print("Finished compiling")
 
-hist = model.fit_generator(generator.flow(trainX, trainY, batch_size=batch_size), epochs=nb_epoch,
-                   callbacks=snapshot.get_callbacks(model_prefix=model_prefix), # Build snapshot callbacks
-                   validation_data=(testX, testY_cat))
+hist = model.fit(generator.flow(trainX, trainY, batch_size=batch_size), epochs=nb_epoch,
+                 callbacks=snapshot.get_callbacks(
+                     model_prefix=model_prefix),  # Build snapshot callbacks
+                 validation_data=(testX, testY_cat))
 
 with open(model_prefix + ' training.csv', mode='w') as f:
     hist_df = pd.DataFrame(hist.history)
