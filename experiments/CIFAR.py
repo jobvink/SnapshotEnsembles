@@ -25,7 +25,7 @@ parser = argparse.ArgumentParser(description='CIFAR 100 Ensemble Prediction')
 parser.add_argument('--snapshot', help='Whether to snapshot the model')
 args = parser.parse_args()
 
-epochs = 5
+epochs = 4
 
 # Data pre-processing
 img_rows, img_cols = 32, 32
@@ -57,12 +57,12 @@ dense_net_model.compile(loss="categorical_crossentropy", optimizer="sgd", metric
 if args.snapshot:
     print('Assembling snapshot ensemble')
     ''' Snapshot major parameters '''
-    M = 10 # number of snapshots
+    M = 2 # number of snapshots
     nb_epoch = T = epochs # number of epochs
     alpha_zero = 0.1 # initial learning rate
     snapshot = SnapshotCallbackBuilder(T, M, alpha_zero)
 
-    model_prefix = 'weights/DenseNet-CIFAR100-%d-%d-snapshots' % (40, 12)
+    model_prefix = 'DenseNet-CIFAR100-%d-%d-snapshots' % (40, 12)
     dense_net_model_history = dense_net_model.fit(
                                     generator.flow(trainX, trainY, batch_size=64), 
                                     callbacks=snapshot.get_callbacks(model_prefix=model_prefix), 
@@ -71,11 +71,11 @@ if args.snapshot:
                                 )
 else:
     print('Training regular network')
-    model_prefix = 'weights/DenseNet-CIFAR100-%d-%d' % (40, 12)
+    model_prefix = 'DenseNet-CIFAR100-%d-%d' % (40, 12)
     dense_net_model_history = dense_net_model.fit(generator.flow(trainX, trainY, batch_size=64), epochs=epochs, validation_data=(testX, testY_cat))
 
 # Store the history to a file in the FS
-with open(model_prefix + ' training.csv', mode='w') as f:
+with open('results/' + model_prefix + ' training.csv', mode='w') as f:
     df = pd.DataFrame(dense_net_model_history.history)
     df.to_csv(f)
 

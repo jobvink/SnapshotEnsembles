@@ -67,15 +67,17 @@ class SnapshotCallbackBuilder:
         if not os.path.exists('weights/'):
             os.makedirs('weights/')
 
-        callback_list = [callbacks.ModelCheckpoint("weights/%s-Best.h5" % model_prefix, monitor="val_acc",
-                                                    save_best_only=True, save_weights_only=True),
-                         callbacks.LearningRateScheduler(schedule=self._cosine_anneal_schedule),
-                         SnapshotModelCheckpoint(self.T, self.M, fn_prefix='weights/%s' % model_prefix)]
+        callback_list = [
+            callbacks.ModelCheckpoint("weights/%s-Best.h5" % model_prefix, monitor="val_acc",
+                                        save_best_only=True, save_weights_only=True),
+            callbacks.LearningRateScheduler(schedule=self._cosine_anneal_schedule),
+            SnapshotModelCheckpoint(self.T, self.M, fn_prefix='weights/%s' % model_prefix)
+        ]
 
         return callback_list
 
-    def _cosine_anneal_schedule(self, t):
-        cos_inner = np.pi * (t % (self.T // self.M))  # t - 1 is used when t has 1-based indexing.
+    def _cosine_anneal_schedule(self, t, lr):
+        cos_inner = np.pi * ((t - 1) % (self.T // self.M))  # t - 1 is used when t has 1-based indexing.
         cos_inner /= self.T // self.M
         cos_out = np.cos(cos_inner) + 1
         return float(self.alpha_zero / 2 * cos_out)
