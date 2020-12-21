@@ -10,6 +10,9 @@ scikit-learn = "*"
 numpy = "==1.19.3"
 pandas = "*"
 jupyter = "*"
+snapshot-ensembles = {editable = true, path = "."}
+seaborn = "*"
+matplotlib = "*"
 
 [dev-packages]
 
