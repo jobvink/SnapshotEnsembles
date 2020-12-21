@@ -37,10 +37,13 @@ def _conv_bn_relu(**conv_params):
     kernel_regularizer = conv_params.setdefault("kernel_regularizer", l2(1.e-4))
 
     def f(input):
-        conv = Conv2D(filters=filters, kernel_size=kernel_size,
-                      strides=strides, padding=padding,
-                      kernel_initializer=kernel_initializer,
-                      kernel_regularizer=kernel_regularizer)(input)
+        conv = Conv2D(
+            filters=filters, 
+            kernel_size=kernel_size, 
+            strides=strides, 
+            padding=padding,
+            kernel_initializer=kernel_initializer,
+            kernel_regularizer=kernel_regularizer)(input)
         return _bn_relu(conv)
 
     return f
