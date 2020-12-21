@@ -27,11 +27,11 @@ def conv_block(ip, nb_filter, dropout_rate=None, weight_decay=1E-4):
 
     concat_axis = 1 if K.image_data_format() == 'channels_first' else -1
 
-    x = BatchNormalization(mode=0, axis=concat_axis, gamma_regularizer=l2(weight_decay),
+    x = BatchNormalization(axis=concat_axis, gamma_regularizer=l2(weight_decay),
                            beta_regularizer=l2(weight_decay))(ip)
     x = Activation('relu')(x)
-    x = Conv2D(nb_filter, (3, 3), init="he_uniform", padding="same", bias=False,
-                      W_regularizer=l2(weight_decay))(x)
+    x = Conv2D(nb_filter, (3, 3), padding="same", use_bias=False,
+                      activity_regularizer=l2(weight_decay))(x)
     if dropout_rate:
         x = Dropout(dropout_rate)(x)
 
@@ -53,11 +53,11 @@ def transition_block(ip, nb_filter, dropout_rate=None, weight_decay=1E-4):
 
     concat_axis = 1 if K.image_data_format() == 'channels_first' else -1
 
-    x = BatchNormalization(mode=0, axis=concat_axis, gamma_regularizer=l2(weight_decay),
+    x = BatchNormalization(axis=concat_axis, gamma_regularizer=l2(weight_decay),
                            beta_regularizer=l2(weight_decay))(ip)
     x = Activation('relu')(x)
-    x = Conv2D(nb_filter, (1, 1), init="he_uniform", padding="same", bias=False,
-                      W_regularizer=l2(weight_decay))(x)
+    x = Conv2D(nb_filter, (1, 1), padding="same", use_bias=False,
+                      activity_regularizer=l2(weight_decay))(x)
     if dropout_rate:
         x = Dropout(dropout_rate)(x)
     x = AveragePooling2D((2, 2), strides=(2, 2))(x)
@@ -87,7 +87,7 @@ def dense_block(x, nb_layers, nb_filter, growth_rate, dropout_rate=None, weight_
     for i in range(nb_layers):
         x = conv_block(x, growth_rate, dropout_rate, weight_decay)
         feature_list.append(x)
-        x = Concatenate()(feature_list, concat_axis=concat_axis)
+        x = Concatenate(axis=concat_axis)(feature_list)
         nb_filter += growth_rate
 
     return x, nb_filter
@@ -121,8 +121,8 @@ def create_dense_net(nb_classes, img_dim, depth=40, nb_dense_block=1, growth_rat
     nb_layers = int((depth - 4) / 3)
 
     # Initial convolution
-    x = Conv2D(nb_filter, (3, 3), init="he_uniform", padding="same", name="initial_conv2D", bias=False,
-                      W_regularizer=l2(weight_decay))(model_input)
+    x = Conv2D(nb_filter, (3, 3), padding="same", name="initial_conv2D", use_bias=False,
+                      activity_regularizer=l2(weight_decay))(model_input)
 
     # Add dense blocks
     for block_idx in range(nb_dense_block - 1):
@@ -135,13 +135,13 @@ def create_dense_net(nb_classes, img_dim, depth=40, nb_dense_block=1, growth_rat
     x, nb_filter = dense_block(x, nb_layers, nb_filter, growth_rate, dropout_rate=dropout_rate,
                                weight_decay=weight_decay)
 
-    x = BatchNormalization(mode=0, axis=concat_axis, gamma_regularizer=l2(weight_decay),
+    x = BatchNormalization(gamma_regularizer=l2(weight_decay),
                            beta_regularizer=l2(weight_decay))(x)
     x = Activation('relu')(x)
     x = GlobalAveragePooling2D()(x)
-    x = Dense(nb_classes, activation='softmax', W_regularizer=l2(weight_decay), b_regularizer=l2(weight_decay))(x)
+    x = Dense(nb_classes, activation='softmax', activity_regularizer=l2(weight_decay), bias_regularizer=l2(weight_decay))(x)
 
-    densenet = Model(input=model_input, output=x, name="create_dense_net")
+    densenet = Model(inputs=model_input, outputs=x, name="create_dense_net")
 
     if verbose: print("DenseNet-%d-%d created." % (depth, growth_rate))
 
