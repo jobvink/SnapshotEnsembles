@@ -27,7 +27,7 @@ parser = argparse.ArgumentParser(description='CIFAR 100 Ensemble Prediction')
 parser.add_argument('--snapshot', help='Whether to snapshot the model')
 args = parser.parse_args()
 
-epochs = 4
+epochs = 100
 
 # Data pre-processing
 img_rows, img_cols = 32, 32
@@ -42,9 +42,9 @@ testX /= 255.0
 all_x = np.concatenate([trainX, testX], axis=0)
 all_y = np.concatenate([trainY, testY], axis=0)
 
-n_batches = 10
+n_batches = 100
 
-active_classes = [i for i in range(50)]
+active_classes = [i for i in range(1, 50)]
 
 
 # This generator allows us to effectively scale the amount of data useable by the network.
@@ -57,34 +57,33 @@ dense_net_model = DN.create_dense_net(nb_classes=100, img_dim=(img_rows, img_col
                                 growth_rate=12, nb_filter=16, dropout_rate=0.2)
 dense_net_model.compile(loss="categorical_crossentropy", optimizer="sgd", metrics=["acc"])
 
+# Convert to one-hot encoding for the result
+    
+all_y_cat = kutils.to_categorical(all_y)
+
 model_prefix = ''
 history = []
 for batch in range(n_batches):
     # (1): Pick 10% of classes which will randomly leave the distribution
-    leaving = np.random.choice(active_classes, size=len(active_classes) / 10, replace=False)
+    leaving = np.random.choice(active_classes, size=int(len(active_classes) / 10), replace=False)
     # (2): Pick 10% of classes which will randomly be added to the distribution
-    adding = np.random.choice([i not in active_classes for i in range(100)], size=len(100 - active_classes) / 10, replace=False)
+    adding = np.random.choice([i for i in range(1, 100) if i not in active_classes], size=int(len(active_classes) / 10), replace=False)
     # Perform 1, 2
     active_classes = [c for c in active_classes if c not in leaving]
-    active_classes = np.concatenate([active_classes, adding], axis=0)
+    active_classes.extend(adding)
 
-    batch_idx = (all_y in active_classes).nonzero()
+    batch_idx = np.array([i in active_classes for i in all_y]).nonzero()
     batch_x = all_x[batch_idx]
-    batch_y = all_y[batch_idx]
+    batch_y = all_y_cat[batch_idx]
 
     # Split results 70/30 for pre batch results
     batch_x_train, batch_x_test, batch_y_train, batch_y_test = train_test_split(batch_x, batch_y, test_size=0.30, random_state=42)
-
-    # Convert to one-hot encoding for the result
-    
-    batch_y_train = kutils.to_categorical(batch_y_train)
-    batch_y_test = kutils.to_categorical(batch_y_test)
 
     # Perform training on the model
     if args.snapshot:
         print('Assembling snapshot ensemble')
         ''' Snapshot major parameters '''
-        M = 2 # number of snapshots
+        M = 1 # number of snapshots
         nb_epoch = T = epochs # number of epochs
         alpha_zero = 0.1 # initial learning rate
         snapshot = SnapshotCallbackBuilder(T, M, alpha_zero)
@@ -108,7 +107,7 @@ with open('results/' + model_prefix + ' training.csv', mode='w') as f:
     df = pd.DataFrame(columns=['','loss','acc','val_loss','val_acc'])
     for h in history:
         df2 = pd.DataFrame(h.history)
-        df.append(df2)
+        df = df.append(df2)
     df.to_csv(f)
 
 yPreds = dense_net_model.predict(testX)
