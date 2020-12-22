@@ -19,10 +19,11 @@ from snapshot import SnapshotCallbackBuilder
 from models import RNN
 from scipy.optimize import minimize
 from sklearn.metrics import log_loss
+from sklearn.preprocessing import OneHotEncoder
 
-n_epochs = 150
-n_models = 15
-n_steps = 48
+n_epochs = 20
+n_models = 10
+n_steps = 24
 model_prefix = f"RNN-snapshot-{n_steps}-{n_epochs}"
 
 sns.set_style("darkgrid")
@@ -34,17 +35,22 @@ tf.config.experimental.set_memory_growth(physical_devices[0], True)
 elec = pd.read_csv('../data/electricity-normalized.csv')
 X = elec.values[:,0:8].astype(np.float)
 y = elec.values[:,8]
-enc = LabelBinarizer()
-y = enc.fit_transform(y.reshape(-1, 1))
+
+enc = OneHotEncoder(categories=[['DOWN', 'UP']])
+y = enc.fit_transform(y.reshape(-1, 1)).toarray()
+
+# %%
 
 snapshot = SnapshotCallbackBuilder(nb_epochs=n_epochs, nb_snapshots=n_models, init_lr=0.1)
 
 split_idx = int(len(X) * 0.7)
-chunks_X = np.array_split(X[:split_idx], n_models)
-chunks_y = np.array_split(y[:split_idx], n_models)
+chunks_X = np.array(np.array_split(X[:split_idx], n_models))
+chunks_y = np.array(np.array_split(y[:split_idx], n_models))
 
-snapshot_model = RNN.create_rnn_model(n_timesteps=n_steps, n_features=8, n_outputs=1)
-snapshot_model.compile(loss='binary_crossentropy', optimizer='sgd', metrics=['acc'])
+print(chunks_X[0].shape, chunks_y[0].shape)
+
+snapshot_model = RNN.create_rnn_model(n_timesteps=n_steps, n_features=8, n_outputs=2)
+snapshot_model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['acc'])
 
 accuracies = []
 train_acc = []
