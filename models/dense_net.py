@@ -30,7 +30,7 @@ def conv_block(ip, nb_filter, dropout_rate=None, weight_decay=1E-4):
     x = BatchNormalization(axis=concat_axis, gamma_regularizer=l2(weight_decay),
                            beta_regularizer=l2(weight_decay))(ip)
     x = Activation('relu')(x)
-    x = Conv2D(nb_filter, (3, 3), padding="same", use_bias=False,
+    x = Conv2D(nb_filter, (3, 3), kernel_initializer='he_uniform', padding="same", use_bias=False,
                       activity_regularizer=l2(weight_decay))(x)
     if dropout_rate:
         x = Dropout(dropout_rate)(x)
@@ -56,7 +56,7 @@ def transition_block(ip, nb_filter, dropout_rate=None, weight_decay=1E-4):
     x = BatchNormalization(axis=concat_axis, gamma_regularizer=l2(weight_decay),
                            beta_regularizer=l2(weight_decay))(ip)
     x = Activation('relu')(x)
-    x = Conv2D(nb_filter, (1, 1), padding="same", use_bias=False,
+    x = Conv2D(nb_filter, (1, 1), kernel_initializer='he_uniform', padding="same", use_bias=False,
                       activity_regularizer=l2(weight_decay))(x)
     if dropout_rate:
         x = Dropout(dropout_rate)(x)
@@ -121,7 +121,7 @@ def create_dense_net(nb_classes, img_dim, depth=40, nb_dense_block=1, growth_rat
     nb_layers = int((depth - 4) / 3)
 
     # Initial convolution
-    x = Conv2D(nb_filter, (3, 3), padding="same", name="initial_conv2D", use_bias=False,
+    x = Conv2D(nb_filter, (3, 3), padding="same", kernel_initializer='he_uniform', name="initial_conv2D", use_bias=False,
                       activity_regularizer=l2(weight_decay))(model_input)
 
     # Add dense blocks

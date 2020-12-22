@@ -77,8 +77,7 @@ class SnapshotCallbackBuilder:
         return callback_list
 
     def _cosine_anneal_schedule(self, t, lr):
-        cos_inner = np.pi * ((t - 1) % (self.T // self.M))  # t - 1 is used when t has 1-based indexing.
+        cos_inner = np.pi * (t % (self.T // self.M))  # t - 1 is used when t has 1-based indexing.
         cos_inner /= self.T // self.M
         cos_out = np.cos(cos_inner) + 1
         return float(self.alpha_zero / 2 * cos_out)
-

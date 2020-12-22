@@ -20,6 +20,8 @@ from snapshot import SnapshotCallbackBuilder
 from models import dense_net as DN
 from models import wide_residual_net as WN
 
+tf.keras.backend.set_floatx('float64')
+
 physical_devices = tf.config.list_physical_devices('GPU')
 tf.config.experimental.set_memory_growth(physical_devices[0], enable=True)
 
@@ -44,7 +46,7 @@ all_y = np.concatenate([trainY, testY], axis=0)
 
 n_batches = 10
 
-active_classes = [i for i in range(1, 50)]
+active_classes = [i for i in range(0, 50)]
 
 
 # This generator allows us to effectively scale the amount of data useable by the network.
@@ -55,7 +57,8 @@ generator.fit(trainX, seed=0, augment=True)
 # Regular DenseNet model
 dense_net_model = DN.create_dense_net(nb_classes=100, img_dim=(img_rows, img_cols, 3), depth=40, nb_dense_block=1,
                                 growth_rate=12, nb_filter=16, dropout_rate=0.2)
-dense_net_model.compile(loss="categorical_crossentropy", optimizer="sgd", metrics=["acc"])
+optimizer = tf.keras.optimizers.SGD(learning_rate=0.1)
+dense_net_model.compile(loss="categorical_crossentropy", optimizer=optimizer, metrics=["acc"])
 
 # Convert to one-hot encoding for the result
     
@@ -63,11 +66,13 @@ all_y_cat = kutils.to_categorical(all_y)
 
 model_prefix = ''
 history = []
+active_classes_history = [active_classes]
+
 for batch in range(n_batches):
     # (1): Pick 10% of classes which will randomly leave the distribution
     leaving = np.random.choice(active_classes, size=int(len(active_classes) / 10), replace=False)
     # (2): Pick 10% of classes which will randomly be added to the distribution
-    adding = np.random.choice([i for i in range(1, 100) if i not in active_classes], size=int(len(active_classes) / 10), replace=False)
+    adding = np.random.choice([i for i in range(0, 100) if i not in active_classes], size=int(len(active_classes) / 10), replace=False)
     # Perform 1, 2
     active_classes = [c for c in active_classes if c not in leaving]
     active_classes.extend(adding)
@@ -75,6 +80,8 @@ for batch in range(n_batches):
     batch_idx = np.array([i in active_classes for i in all_y]).nonzero()
     batch_x = all_x[batch_idx]
     batch_y = all_y_cat[batch_idx]
+
+    active_classes_history.append(active_classes)
 
     # Split results 70/30 for pre batch results
     batch_x_train, batch_x_test, batch_y_train, batch_y_test = train_test_split(batch_x, batch_y, test_size=0.30, random_state=42)
@@ -85,7 +92,7 @@ for batch in range(n_batches):
         print('Assembling snapshot ensemble')
         ''' Snapshot major parameters '''
         M = 1 # number of snapshots
-        nb_epoch = T = epochs # number of epochs
+        T = epochs # number of epochs
         alpha_zero = 0.1 # initial learning rate
         snapshot = SnapshotCallbackBuilder(T, M, alpha_zero)
 
