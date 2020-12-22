@@ -13,6 +13,7 @@ jupyter = "*"
 snapshot-ensembles = {editable = true, path = "."}
 seaborn = "*"
 matplotlib = "*"
+joblib = "*"
 
 [dev-packages]
 
