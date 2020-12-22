@@ -57,6 +57,7 @@ generator.fit(trainX, seed=0, augment=True)
 # Regular DenseNet model
 dense_net_model = DN.create_dense_net(nb_classes=100, img_dim=(img_rows, img_cols, 3), depth=40, nb_dense_block=1,
                                 growth_rate=12, nb_filter=16, dropout_rate=0.2)
+
 optimizer = tf.keras.optimizers.SGD(learning_rate=0.1)
 dense_net_model.compile(loss="categorical_crossentropy", optimizer=optimizer, metrics=["acc"])
 
@@ -117,6 +118,9 @@ with open('results/' + model_prefix + ' training.csv', mode='w') as f:
         df2 = pd.DataFrame(h.history)
         df = df.append(df2)
     df.to_csv(f)
+
+with open(f'results/{model_prefix}-active-labels') as f:
+    df = pd.DataFrame(active_classes_history, columns=np.arange(0, 50))
 
 yPreds = dense_net_model.predict(testX)
 yPred = np.argmax(yPreds, axis=1)
