@@ -1,19 +1,13 @@
-from tensorflow.keras.models import Sequential, Embedding, LSTM
-from tensorflow.keras.layers import Dense, Dropout, Activation
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Embedding, LSTM
 from tensorflow.keras.regularizers import l2
 import tensorflow.keras.backend as K
 
-def create_model():
+def create_rnn_model(n_timesteps, n_features, n_outputs):
     model = Sequential()
-    # Add an Embedding layer expecting input vocab of size 1000, and
-    # output embedding dimension of size 64.
-    model.add(Embedding(input_dim=1000, output_dim=64))
-
-    # Add a LSTM layer with 128 internal units.
-    model.add(LSTM(128))
-
-    # Add a Dense layer with 10 units.
-    model.add(Dense(10))
-
+    model.add(LSTM(50, input_shape=(n_timesteps, n_features), return_sequences=False, activation='relu'))
+    # model.add(LSTM(50, return_sequences=False, activation='relu'))
+    # model.add(Dense(10, activation='softmax'))
+    model.add(Dense(n_outputs, activation='sigmoid'))
     model.summary()
     return model
