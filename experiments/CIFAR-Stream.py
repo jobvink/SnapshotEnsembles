@@ -27,7 +27,7 @@ parser = argparse.ArgumentParser(description='CIFAR 100 Ensemble Prediction')
 parser.add_argument('--snapshot', help='Whether to snapshot the model')
 args = parser.parse_args()
 
-epochs = 100
+epochs = 50
 
 # Data pre-processing
 img_rows, img_cols = 32, 32
@@ -42,7 +42,7 @@ testX /= 255.0
 all_x = np.concatenate([trainX, testX], axis=0)
 all_y = np.concatenate([trainY, testY], axis=0)
 
-n_batches = 100
+n_batches = 10
 
 active_classes = [i for i in range(1, 50)]
 
@@ -79,6 +79,7 @@ for batch in range(n_batches):
     # Split results 70/30 for pre batch results
     batch_x_train, batch_x_test, batch_y_train, batch_y_test = train_test_split(batch_x, batch_y, test_size=0.30, random_state=42)
 
+    print(f'Batch: {batch + 1}/{n_batches}')
     # Perform training on the model
     if args.snapshot:
         print('Assembling snapshot ensemble')
