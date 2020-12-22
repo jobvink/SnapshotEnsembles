@@ -20,8 +20,6 @@ from snapshot import SnapshotCallbackBuilder
 from models import dense_net as DN
 from models import wide_residual_net as WN
 
-tf.keras.backend.set_floatx('float64')
-
 physical_devices = tf.config.list_physical_devices('GPU')
 tf.config.experimental.set_memory_growth(physical_devices[0], enable=True)
 
@@ -58,7 +56,7 @@ generator.fit(trainX, seed=0, augment=True)
 dense_net_model = DN.create_dense_net(nb_classes=100, img_dim=(img_rows, img_cols, 3), depth=40, nb_dense_block=1,
                                 growth_rate=12, nb_filter=16, dropout_rate=0.2)
 
-optimizer = tf.keras.optimizers.SGD(learning_rate=0.1)
+optimizer = tf.keras.optimizers.SGD(learning_rate=0.01)
 dense_net_model.compile(loss="categorical_crossentropy", optimizer=optimizer, metrics=["acc"])
 
 # Convert to one-hot encoding for the result
