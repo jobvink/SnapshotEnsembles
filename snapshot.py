@@ -29,7 +29,7 @@ class SnapshotModelCheckpoint(Callback):
         if epoch != 0 and (epoch + 1) % self.check == 0:
             filepath = self.fn_prefix + "-%d.h5" % ((epoch + 1) // self.check)
             self.model.save_weights(filepath, overwrite=True)
-            #print("Saved snapshot at weights/%s_%d.h5" % (self.fn_prefix, epoch))
+            print("Saved snapshot at weights/%s_%d.h5" % (self.fn_prefix, epoch))
 
 
 class SnapshotCallbackBuilder:
