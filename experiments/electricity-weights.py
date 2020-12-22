@@ -29,7 +29,7 @@ except:
 
 n_models = 10
 n_steps = 5
-folder_name = './RNN-snapshot-48'
+folder_name = '../analytics/electricity/RNN-snapshot-48-150'
 
 elec = pd.read_csv('../data/electricity-normalized.csv')
 X = elec.values[:,0:8].astype(np.float)
@@ -56,9 +56,10 @@ for fn in model_names:
 
     print("Obtained predictions from model with weights = %s" % (fn))
 
+print(X_test[0], preds[0][0])
 
 def calculate_weighted_accuracy(prediction_weights):
-    weighted_predictions = np.zeros((X_test.shape[0], 1), dtype='float32')
+    weighted_predictions = np.zeros((X_test.shape[0], 2), dtype='float32')
     for weight, prediction in zip(prediction_weights, preds):
         weighted_predictions += weight * prediction
     y_predicted = np.argmax(weighted_predictions, axis=1)
@@ -70,7 +71,7 @@ def calculate_weighted_accuracy(prediction_weights):
 # Create the loss metric 
 def log_loss_func(weights):
     ''' scipy minimize will pass the weights as a numpy array '''
-    final_prediction = np.zeros((X_test.shape[0], 1), dtype='float32')
+    final_prediction = np.zeros((X_test.shape[0], 2), dtype='float32')
 
     for weight, prediction in zip(weights, preds):
         final_prediction += weight * prediction
@@ -92,7 +93,7 @@ constraints = ({'type': 'eq', 'fun':lambda w: 1 - sum(w)})
 bounds = [(0, 1)] * len(preds)
 
 # Check for NUM_TESTS times
-for iteration in range(2):
+for iteration in range(10):
     # Random initialization of weights
     prediction_weights = np.random.random(len(model_names))
     
@@ -101,7 +102,7 @@ for iteration in range(2):
     print('Best Ensemble Weights: {weights}'.format(weights=result['x']))
     
     weights = result['x']
-    weighted_predictions = np.zeros((X_test.shape[0], 1), dtype='float32')
+    weighted_predictions = np.zeros((X_test.shape[0], 2), dtype='float32')
     
     # Calculate weighted predictions
     for weight, prediction in zip(weights, preds):
