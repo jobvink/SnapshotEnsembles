@@ -1,13 +1,27 @@
-# %%
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
+
+import argparse
+from distutils.util import strtobool
+
+str2bool = lambda x: bool(strtobool(x))
+
+parser = argparse.ArgumentParser(description='RNN on Electricity Dataset')
+
+parser.add_argument('--epochs', type=int, default=400, help='Total of number of epochs to train on')
+parser.add_argument('--models', type=int, default=10, help='Number of snapshots to take/batches to split data on')
+parser.add_argument('--steps', type=int, default=24, help='Number of timesteps in a sliding window')
+parser.add_argument('--snapshot', type=str2bool, default=False, nargs='?', help='Train snapshot model or default')
+parser.add_argument('-n', type=int, default=1, help='Number of times to run')
+
+args = parser.parse_args()
+print(args)
 
 import pandas as pd
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 import tensorflow as tf
-import os
-import joblib
-
 from tensorflow import keras
 from tensorflow.keras import metrics
 from sklearn.metrics import accuracy_score
@@ -16,189 +30,114 @@ from sklearn.preprocessing import LabelBinarizer
 from tensorflow.python.keras import activations
 from tensorflow.python.ops.gen_dataset_ops import OneShotIterator
 from snapshot import SnapshotCallbackBuilder
-from models import RNN
 from scipy.optimize import minimize
 from sklearn.metrics import log_loss
+from sklearn.preprocessing import OneHotEncoder
+from models import RNN
 
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Embedding, Input, LSTM, ConvLSTM2D, TimeDistributed, Conv1D, MaxPooling1D, Flatten
+from tensorflow.keras.regularizers import l2
+import tensorflow.keras.backend as K
+
+from sklearn.metrics import accuracy_score
 sns.set_style("darkgrid")
 
-try:
-    physical_devices = tf.config.list_physical_devices('GPU')
-    tf.config.experimental.set_memory_growth(physical_devices[0], True)
-except:
-    # Invalid device or cannot modify virtual devices once initialized.
-    pass
+import tensorflow as tf
+physical_devices = tf.config.list_physical_devices('GPU') 
+tf.config.experimental.set_memory_growth(physical_devices[0], True)
+
+
+def get_m_snapshots(folder_name, m):
+    model_names = os.listdir(f'weights/{folder_name}')
+    model_names = [k for k in model_names if not 'Best' in k]
+    return model_names[-min(len(model_names), m):]
+
+def calculate_weighted_accuracy(predictions, y_test):
+    predictions = np.array(predictions)
+    prediction_weights = [1. / predictions.shape[0]] * predictions.shape[0]
+    weighted_predictions = np.zeros((predictions.shape[1], 2), dtype='float32')
+    for weight, prediction in zip(prediction_weights, predictions):
+        weighted_predictions += weight * prediction
+    yPred = enc.inverse_transform(weighted_predictions)
+    yTrue = enc.inverse_transform(y_test)
+    return accuracy_score(yTrue, yPred)
+
+model_prefix = f"RNN-elec-{'snapshot-' if args.snapshot else ''}{args.models}M-{args.steps}T-{args.epochs}E"
 
 elec = pd.read_csv('../data/electricity-normalized.csv')
 X = elec.values[:,0:8].astype(np.float)
 y = elec.values[:,8]
-enc = LabelBinarizer()
-y = enc.fit_transform(y.reshape(-1, 1))
 
-n_epochs = 200
-
-# %%
-
-dataset = timeseries_dataset_from_array(X, y, sequence_length=5, batch_size=300, end_index=int(0.7 * len(X)))
-dataset_test = timeseries_dataset_from_array(X, y, sequence_length=5, batch_size=300, start_index=int(0.7 * len(X)))
-
-retrain = False
-if not os.path.exists('../weights/RNN.h5') or retrain:
-    model = RNN.create_rnn_model(n_timesteps=5, n_features=8, n_outputs=1)
-    model.compile(loss='binary_crossentropy', optimizer='sgd', metrics=['accuracy'])
-    hist = model.fit(dataset, epochs=n_epochs)
-    history = hist.history
-
-    # persist
-    model.save(f'../weights/RNN.h5')
-    joblib.dump(hist.history, '../weights/RNN-history.gz')
-else:
-    print('Loading model from filesystem...')
-    model = keras.models.load_model('../weights/RNN.h5')
-    history = joblib.load('../weights/RNN-history.gz')
-
-# %%
-
-df = pd.DataFrame(history)
-fig = sns.lineplot(data=df[['accuracy']])
-fig.set_title('Electricity - Single Model')
-fig.set_xlabel('Epoch')
-fig.set_ylabel('Accuracy')
-
-accuracy = model.evaluate(dataset_test)[1]
-print(f'Accuracy: {accuracy}')
-
-# %%
-######################### SNAPSHOT #########################
-
-n_models = 10
-n_steps = 10
-snapshot = SnapshotCallbackBuilder(nb_epochs=n_epochs, nb_snapshots=n_models, init_lr=0.1)
+enc = OneHotEncoder(categories=[['DOWN', 'UP']])
+y = enc.fit_transform(y.reshape(-1, 1)).toarray()
 
 split_idx = int(len(X) * 0.7)
-chunks_X = np.array_split(X[:split_idx], n_models)
-chunks_y = np.array_split(y[:split_idx], n_models)
+chunks_X = np.array(np.array_split(X[:split_idx], args.models))
+chunks_y = np.array(np.array_split(y[:split_idx], args.models))
 
-snapshot_model = RNN.create_rnn_model(n_timesteps=n_steps, n_features=8, n_outputs=1)
-snapshot_model.compile(loss='binary_crossentropy', optimizer='sgd', metrics=['acc'])
+for i in range(1, args.n + 1):
+    model_folder = f'{model_prefix}/{i}'
 
-accuracies = []
-train_acc = []
-val_acc = []
+    if not os.path.exists(f'weights/{model_folder}'):
+        os.makedirs(f'weights/{model_folder}')
 
-for train_X, train_y in zip(chunks_X, chunks_y):
-    dataset = timeseries_dataset_from_array(train_X, train_y, sequence_length=n_steps, batch_size=100, end_index=int(0.9 * len(train_X)))
-    dataset_test = timeseries_dataset_from_array(train_X, train_y, sequence_length=n_steps, batch_size=100, start_index=int(0.9 * len(train_X)))
+    print(f'\n\nTraining {model_prefix}, iteration {i}...\n\n')
+    snapshot = SnapshotCallbackBuilder(nb_epochs=args.epochs, nb_snapshots=args.models, init_lr=0.01)
+    model = RNN.create_rnn_model(n_timesteps=args.steps, n_features=8, n_outputs=2)
+    model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['acc'])
+    model_predictor = RNN.create_rnn_model(n_timesteps=args.steps, n_features=8, n_outputs=2)
+    model_predictor.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['acc'])
 
-    hist = snapshot_model.fit(
-        dataset, 
-        epochs=int(n_epochs // n_models),
-        callbacks=snapshot.get_callbacks(
-            model_prefix="RNN-snapshot"
-        ),  # Build snapshot callbacks
-        validation_data=dataset_test,
-    )
+    train_acc = []
+    val_acc = []
 
-    train_acc.extend(hist.history['acc'])
-    val_acc.extend(hist.history['val_acc'])
-    # accuracies.append(model.evaluate(dataset_test)[1])
+    for train_X, train_y, i in zip(chunks_X, chunks_y, range(args.models)):
+        dataset = timeseries_dataset_from_array(train_X, train_y, sequence_length=args.steps, batch_size=len(train_X), end_index=int(0.9 * len(train_X)))
+        dataset_test = timeseries_dataset_from_array(train_X, train_y, sequence_length=args.steps, batch_size=len(train_X), start_index=int(0.9 * len(train_X)))
+
+        if args.snapshot:
+            hist = model.fit(
+                dataset, 
+                epochs=int(args.epochs // args.models),
+                callbacks=snapshot.get_callbacks(
+                    model_prefix=f'{model_folder}/{model_prefix}-{i}'
+                ),  # Build snapshot callbacks
+            )
+
+            predictions = []
+            for fn in get_m_snapshots(model_folder, 5):
+                model_predictor.load_weights(f'weights/{model_folder}/{fn}')
+                prediction = model_predictor.predict(dataset_test, batch_size=100)
+                predictions.append(prediction)
+
+            train_acc.extend(hist.history['acc'])
+            validation_acc = calculate_weighted_accuracy(predictions, list(dataset_test)[0][1])
+            val_acc.extend([validation_acc] * (args.epochs // args.models))
+
+        else: # no snapshot
+            hist = model.fit(
+                dataset, 
+                epochs=int(args.epochs // args.models),
+            )
+
+            train_acc.extend(hist.history['acc'])
+            yPred = enc.inverse_transform(model.predict(dataset_test))
+            yTrue = enc.inverse_transform(list(dataset_test)[0][1])
+            validation_accuracy = accuracy_score(yTrue, yPred)
+            val_acc.extend([validation_accuracy] * (args.epochs // args.models))
+
+    if not args.snapshot:
+        print(f'Saving model in weights/{model_folder}/{model_prefix}.h5')
+        model.save_weights(f'weights/{model_folder}/{model_prefix}.h5')
 
     df = pd.DataFrame({ 'accuracy': train_acc, 'val_accuracy': val_acc })
+    plt.clf()
     fig = sns.lineplot(data=df)
-    fig.set_title('Electricity - Snapshot')
+    fig.set_title(f"Electricity - {'Snapshot' if args.snapshot else 'Single Model'}")
     fig.set_xlabel('Epoch')
     fig.set_ylabel('Accuracy')
-    plt.show()
+    plt.savefig(f'weights/{model_folder}/{model_prefix}.pdf')
 
-dataset_test = timeseries_dataset_from_array(X, y, sequence_length=5, batch_size=300, start_index=int(0.7 * len(X)))
-ss_accuracy = snapshot_model.evaluate(dataset_test)[1]
-print(f'Accuracy: {ss_accuracy}')
-
-# %%
-######################### WEIGHTS #########################
-
-model_names = os.listdir('./RNN-snapshot-weights')
-snapshot_model = RNN.create_rnn_model(n_timesteps=5, n_features=8, n_outputs=1)
-snapshot_model.compile(loss='binary_crossentropy', optimizer='sgd', metrics=['acc'])
-dataset_test = timeseries_dataset_from_array(X, y, sequence_length=5, batch_size=int(0.3 * len(X)), start_index=int(0.7 * len(X)))
-X_test, y_test = list(dataset_test)[0]
-
-X_test = X_test.numpy()
-y_test = y_test.numpy()
-
-preds = []
-for fn in model_names:
-    snapshot_model.load_weights(f'./RNN-snapshot-weights/{fn}')
-
-    prediction_y = snapshot_model.predict(X_test, batch_size=128)
-    preds.append(prediction_y)
-
-    print("Obtained predictions from model with weights = %s" % (fn))
-
-def calculate_weighted_accuracy(prediction_weights):
-    weighted_predictions = np.zeros((X_test.shape[0], 1), dtype='float32')
-    for weight, prediction in zip(prediction_weights, preds):
-        weighted_predictions += weight * prediction
-    y_predicted = np.argmax(weighted_predictions, axis=1)
-    accuracy = accuracy_score(y_test, y_predicted) * 100
-    error = 100 - accuracy
-    print("Accuracy: ", accuracy)
-    print("Error: ", error)
-
-# Create the loss metric 
-def log_loss_func(weights):
-    ''' scipy minimize will pass the weights as a numpy array '''
-    final_prediction = np.zeros((X_test.shape[0], 1), dtype='float32')
-
-    for weight, prediction in zip(weights, preds):
-        final_prediction += weight * prediction
-
-    return log_loss(y_test, final_prediction)
-
-# Evenly weighted
-print('\n\n--------------- Evenly weighted ---------------\n')
-prediction_weights = [1. / len(model_names)] * len(model_names)
-calculate_weighted_accuracy(prediction_weights)
-
-print('\n\n------------- Calculating Weights -------------\n')
-best_acc = 0.0
-best_weights = None
-
-# Parameters for optimization
-constraints = ({'type': 'eq', 'fun':lambda w: 1 - sum(w)})
-bounds = [(0, 1)] * len(preds)
-
-# Check for NUM_TESTS times
-for iteration in range(20):
-    # Random initialization of weights
-    prediction_weights = np.random.random(len(model_names))
-    
-    # Minimise the loss 
-    result = minimize(log_loss_func, prediction_weights, method='SLSQP', bounds=bounds, constraints=constraints)
-    print('Best Ensemble Weights: {weights}'.format(weights=result['x']))
-    
-    weights = result['x']
-    weighted_predictions = np.zeros((X_test.shape[0], 1), dtype='float32')
-    
-    # Calculate weighted predictions
-    for weight, prediction in zip(weights, preds):
-        weighted_predictions += weight * prediction
-
-    y_prediction = np.argmax(weighted_predictions, axis=1)
-
-    # Calculate weight prediction accuracy
-    accuracy = accuracy_score(y_test, y_prediction) * 100
-    error = 100 - accuracy
-    print("Iteration %d: Accuracy: " % (iteration + 1), accuracy)
-    print("Iteration %d: Error: " % (iteration + 1), error)
-    
-    # Save current best weights 
-    if accuracy > best_acc:
-        best_acc = accuracy
-        best_weights = weights
-
-print("Best Accuracy: ", best_acc)
-print("Best Weights: ", best_weights)
-calculate_weighted_accuracy(best_weights)
-
-# %%
+    with open(f'weights/{model_folder}/{model_prefix}.csv', mode='w') as f:
+        df.to_csv(f)
