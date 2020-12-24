@@ -69,8 +69,8 @@ def calculate_weighted_accuracy(predictions, y_test):
 model_prefix = f"RNN-covtype-{'snapshot-' if args.snapshot else ''}{args.models}M-{args.steps}T-{args.epochs}E"
 
 covtype = pd.read_csv('../data/covtype-normalized.csv')
-X = covtype.values[:,0:55].astype(np.float)
-y = covtype.values[:,55]
+X = covtype.values[:,0:54].astype(np.float)
+y = covtype.values[:,54]
 
 enc = OneHotEncoder(categories=[['Spruce/Fir','Lodgepole Pine','Ponderosa Pine','Cottonwood/Willow','Aspen','Douglas-fir','Krummholz']])
 y = enc.fit_transform(y.reshape(-1, 1)).toarray()
