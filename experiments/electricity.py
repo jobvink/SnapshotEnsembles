@@ -134,7 +134,7 @@ for i in range(1, args.n + 1):
         print(f'Saving model in weights/{model_folder}/{model_prefix}.h5')
         model.save_weights(f'weights/{model_folder}/{model_prefix}.h5')
 
-    df = pd.DataFrame({ 'accuracy': train_acc, 'val_accuracy': val_acc })
+    df = pd.DataFrame({'val_accuracy': val_acc })
     plt.clf()
     fig = sns.lineplot(data=df)
     fig.set_title(f"Electricity - {'Snapshot' if args.snapshot else 'Single Model'}")
