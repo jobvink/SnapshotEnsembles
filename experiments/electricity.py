@@ -116,7 +116,7 @@ for i in range(1, args.n + 1):
 
             train_acc.extend(hist.history['acc'])
             validation_acc = calculate_weighted_accuracy(predictions, list(dataset_test)[0][1])
-            val_acc.extend([validation_acc] * (args.epochs // args.models))
+            val_acc.extend([validation_acc])
 
         else: # no snapshot
             hist = model.fit(
@@ -128,7 +128,7 @@ for i in range(1, args.n + 1):
             yPred = enc.inverse_transform(model.predict(dataset_test))
             yTrue = enc.inverse_transform(list(dataset_test)[0][1])
             validation_accuracy = accuracy_score(yTrue, yPred)
-            val_acc.extend([validation_accuracy] * (args.epochs // args.models))
+            val_acc.extend([validation_accuracy])
 
     if not args.snapshot:
         print(f'Saving model in weights/{model_folder}/{model_prefix}.h5')
@@ -142,5 +142,5 @@ for i in range(1, args.n + 1):
     fig.set_ylabel('Accuracy')
     plt.savefig(f'weights/{model_folder}/{model_prefix}.pdf')
 
-    with open(f'weights/{model_folder}/{model_prefix}-{i}.csv', mode='w') as f:
+    with open(f'weights/{model_folder}/{model_prefix}.csv', mode='w') as f:
         df.to_csv(f)
