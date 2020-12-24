@@ -2,7 +2,7 @@ import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 import sys
-sys.path.append("..")
+sys.path.append("../../..")
 
 import argparse
 from distutils.util import strtobool
@@ -50,6 +50,7 @@ import tensorflow as tf
 physical_devices = tf.config.list_physical_devices('GPU') 
 tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
+enc = OneHotEncoder(categories=[['Spruce/Fir','Lodgepole Pine','Ponderosa Pine','Cottonwood/Willow','Aspen','Douglas-fir','Krummholz']], handle_unknown="ignore")
 
 def get_m_snapshots(folder_name, m):
     model_names = os.listdir(f'weights/{folder_name}')
@@ -59,7 +60,7 @@ def get_m_snapshots(folder_name, m):
 def calculate_weighted_accuracy(predictions, y_test):
     predictions = np.array(predictions)
     prediction_weights = [1. / predictions.shape[0]] * predictions.shape[0]
-    weighted_predictions = np.zeros((predictions.shape[1], 2), dtype='float32')
+    weighted_predictions = np.zeros((predictions.shape[1], 7), dtype='float32')
     for weight, prediction in zip(prediction_weights, predictions):
         weighted_predictions += weight * prediction
     yPred = enc.inverse_transform(weighted_predictions)
@@ -72,14 +73,13 @@ covtype = pd.read_csv('../data/covtype-normalized.csv')
 X = covtype.values[:,0:54].astype(np.float)
 y = covtype.values[:,54]
 
-enc = OneHotEncoder(categories=[['Spruce/Fir','Lodgepole Pine','Ponderosa Pine','Cottonwood/Willow','Aspen','Douglas-fir','Krummholz']])
 y = enc.fit_transform(y.reshape(-1, 1)).toarray()
 
 split_idx = int(len(X) * 0.7)
 chunks_X = np.array(np.array_split(X[:split_idx], args.models))
 chunks_y = np.array(np.array_split(y[:split_idx], args.models))
 
-for i in range(1, args.n + 1):
+for i in range(7, args.n + 1):
     model_folder = f'{model_prefix}/{i}'
 
     if not os.path.exists(f'weights/{model_folder}'):
@@ -96,7 +96,7 @@ for i in range(1, args.n + 1):
     val_acc = []
 
     for train_X, train_y, i in zip(chunks_X, chunks_y, range(args.models)):
-        dataset = timeseries_dataset_from_array(train_X, train_y, sequence_length=args.steps, batch_size=len(train_X), end_index=int(0.9 * len(train_X)))
+        dataset = timeseries_dataset_from_array(train_X, train_y, sequence_length=args.steps, batch_size=1500, end_index=int(0.9 * len(train_X)))
         dataset_test = timeseries_dataset_from_array(train_X, train_y, sequence_length=args.steps, batch_size=len(train_X), start_index=int(0.9 * len(train_X)))
 
         if args.snapshot:
