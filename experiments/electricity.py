@@ -139,5 +139,5 @@ for i in range(1, args.n + 1):
     fig.set_ylabel('Accuracy')
     plt.savefig(f'weights/{model_folder}/{model_prefix}.pdf')
 
-    with open(f'weights/{model_folder}/{model_prefix}.csv', mode='w') as f:
+    with open(f'weights/{model_folder}/{model_prefix}-{i}.csv', mode='w') as f:
         df.to_csv(f)
