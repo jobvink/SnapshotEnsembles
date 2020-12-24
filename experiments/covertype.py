@@ -87,9 +87,9 @@ for i in range(1, args.n + 1):
 
     print(f'\n\nTraining {model_prefix}, iteration {i}...\n\n')
     snapshot = SnapshotCallbackBuilder(nb_epochs=args.epochs, nb_snapshots=args.models, init_lr=0.01)
-    model = RNN.create_rnn_model(n_timesteps=args.steps, n_features=8, n_outputs=7)
+    model = RNN.create_rnn_model(n_timesteps=args.steps, n_features=54, n_outputs=7)
     model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['acc'])
-    model_predictor = RNN.create_rnn_model(n_timesteps=args.steps, n_features=8, n_outputs=7)
+    model_predictor = RNN.create_rnn_model(n_timesteps=args.steps, n_features=54, n_outputs=7)
     model_predictor.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['acc'])
 
     train_acc = []
