@@ -1,5 +1,8 @@
 import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+
+import sys
+sys.path.append("..")
 
 import argparse
 from distutils.util import strtobool
