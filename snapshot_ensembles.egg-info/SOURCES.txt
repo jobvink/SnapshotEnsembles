@@ -1,8 +1,10 @@
 README.md
 pyproject.toml
 setup.py
-experiments/01.py
+experiments/CIFAR.py
 experiments/__init__.py
+experiments/electricity.py
+models/RNN.py
 models/__init__.py
 models/dense_net.py
 models/resnet.py
