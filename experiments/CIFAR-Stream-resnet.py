@@ -21,8 +21,6 @@ from models import dense_net as DN
 from models import wide_residual_net as WN
 from models.resnet_alt import resnet_v1
 
-tf.keras.backend.set_floatx('float64')
-
 physical_devices = tf.config.list_physical_devices('GPU')
 tf.config.experimental.set_memory_growth(physical_devices[0], enable=True)
 
