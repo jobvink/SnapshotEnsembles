@@ -34,9 +34,9 @@ data = data.drop(['Unnamed: 0'], axis=1)
 #     .rename(columns={'accuracy': 'accuracy (Snapshot)', 'val_accuracy': 'validation accuracy (Snapshot)'})
 
 # data = pd.concat([single_data], axis=1)
-ax, fig = sns.lineplot(data=data, err_style=None, dashes=False) # , err_style="bars", ci=68 for bars
+sns.lineplot(data=data, err_style=None, dashes=False) # , err_style="bars", ci=68 for bars
 plt.xlabel('Epochs')
 plt.ylabel('Accuracy')
 lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
-fig.savefig("learning-rate.pdf", bbox_extra_artists=(lgd,), bbox_inches='tight')
+plt.savefig("learning-rate.pdf", bbox_extra_artists=(lgd,), bbox_inches='tight')
 # %%
