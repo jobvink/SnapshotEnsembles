@@ -69,8 +69,10 @@ active_classes_history = [active_classes]
 
 for batch in range(n_batches):
     # (1): Pick 10% of classes which will randomly leave the distribution
+    np.random.seed(42)
     leaving = np.random.choice(active_classes, size=int(len(active_classes) / 10), replace=False)
     # (2): Pick 10% of classes which will randomly be added to the distribution
+    np.random.seed(43)
     adding = np.random.choice([i for i in range(0, 100) if i not in active_classes], size=int(len(active_classes) / 10), replace=False)
     # Perform 1, 2
     active_classes = [c for c in active_classes if c not in leaving]
@@ -117,8 +119,9 @@ with open('results/' + model_prefix + ' training.csv', mode='w') as f:
         df = df.append(df2)
     df.to_csv(f)
 
-with open(f'results/{model_prefix}-active-labels') as f:
+with open(f'results/{model_prefix}-active-labels.csv', mode='w') as f:
     df = pd.DataFrame(active_classes_history, columns=np.arange(0, 50))
+    df.to_csv(f)
 
 yPreds = resnet_model.predict(testX)
 yPred = np.argmax(yPreds, axis=1)

@@ -18,6 +18,7 @@ from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
 from snapshot import SnapshotCallbackBuilder
 from models import dense_net as DN
+from models import dense_net_2
 from models import wide_residual_net as WN
 
 physical_devices = tf.config.list_physical_devices('GPU')
@@ -53,11 +54,12 @@ generator = ImageDataGenerator(
 generator.fit(trainX, seed=0, augment=True)
 
 # Regular DenseNet model
-dense_net_model = DN.create_dense_net(nb_classes=100, img_dim=(img_rows, img_cols, 3), depth=40, nb_dense_block=1,
-                                growth_rate=12, nb_filter=16, dropout_rate=0.2)
+# (nb_classes=100, img_dim=(img_rows, img_cols, 3), depth=40, nb_dense_block=1,
+                                # growth_rate=12, nb_filter=16, dropout_rate=0.2)
+dense_net_model = dense_net_2.DenseNet(input_shape=(img_rows, img_cols, 3), nb_classes=100).build_model()
 
 optimizer = tf.keras.optimizers.SGD(learning_rate=0.01)
-dense_net_model.compile(loss="categorical_crossentropy", optimizer=optimizer, metrics=["acc"])
+# dense_net_model.compile(loss="categorical_crossentropy", optimizer=optimizer, metrics=["acc"])
 
 # Convert to one-hot encoding for the result
     
