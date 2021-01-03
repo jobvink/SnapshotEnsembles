@@ -54,7 +54,7 @@ generator.fit(trainX, seed=0, augment=True)
 # Regular ResNet model
 resnet_model = WN.create_wide_residual_network((img_rows, img_cols, 3), nb_classes=100, N=2, k=4, dropout=0.00)
 
-optimizer = tf.keras.optimizers.SGD(learning_rate=0.01)
+optimizer = tf.keras.optimizers.SGD(learning_rate=0.1)
 resnet_model.compile(loss="categorical_crossentropy", optimizer=optimizer, metrics=["acc"])
 
 # Convert to one-hot encoding for the result
@@ -115,8 +115,9 @@ with open('results/' + model_prefix + ' training.csv', mode='w') as f:
         df = df.append(df2)
     df.to_csv(f)
 
-with open(f'results/{model_prefix}-active-labels') as f:
+with open(f'results/{model_prefix}-active-labels.csv', mode='w') as f:
     df = pd.DataFrame(active_classes_history, columns=np.arange(0, 50))
+    df.to_csv(f)
 
 yPreds = resnet_model.predict(testX)
 yPred = np.argmax(yPreds, axis=1)
